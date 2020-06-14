@@ -19,13 +19,12 @@ def get_creds():
 def open_driver(options=['--ignore-certificate-errors',"--test-type"],driver_path='./chromedriver'):
   driver_options = webdriver.ChromeOptions()
   for x in options:
-  	driver_options.add_argument(x)
+    driver_options.add_argument(x)
 
   driver = webdriver.Chrome(executable_path=driver_path,chrome_options=driver_options)
   return driver 
 
-
-def send_sms(credentials,driver,start_url='https://www.politicalcomms.com/users/sign_in',message_count=30000):
+def login(driver,credentials,start_url='https://www.politicalcomms.com/users/sign_in',):
   driver.get(start_url)
   #login
   driver.find_element_by_id('user_email').send_keys(credentials['email'])
@@ -36,44 +35,75 @@ def send_sms(credentials,driver,start_url='https://www.politicalcomms.com/users/
   driver.find_element_by_name('accepted').click()
   driver.find_element_by_name('commit').submit()
 
+  return driver
+
+def project_available(driver):
+
   #Open SMS Project
   #if there are multiple projects then one can be found by name or element id
+  #if there are none or if we are done return false
   try:
     driver.find_element_by_xpath("//a[text()='Send']").click()
+    return driver
   except Exception as e:
-    print("no jobs found")
-    driver.stop_client()
-    driver.quit()
+    try:
+      #try to detect if we are at the job screen
+      #currently not working
+      if driver.find_element_by_xpath("//p[text()='All messages for you sent! Other users have been assigned the remaining contacts.']"):
+        print("all jobs finished")
+        clean_up(driver)
+    except:
+      print("no jobs found")
+      clean_up(driver)
+    return False
+
+def send_sms(driver,message_count=30000):
+
+  #Open SMS Project
+  #if there are multiple projects then one can be found by name or element id
 
 
   #Send message_count messages
+  fail_count = 0
+  if project_available(driver):
+    for x in range(message_count):
+      #driver.find_element_by_xpath("//input[@name='commit']").submit()
+      try:
+        element_to_click = WebDriverWait(driver, 13).until(EC.element_to_be_clickable((By.XPATH, "//input[@name='commit']")))
+        element_to_click.submit()
+        fail_count = 0
+      except:
+        try:
+          #try to detect if we are at the job screen
+          #currently not working
+          if driver.find_element_by_xpath("//p[text()='All messages for you sent! Other users have been assigned the remaining contacts.']"):
+            driver.quit()
+        except:
+          #try to detect if we are at the job screen
+          #currently not working
+          if driver.find_element_by_xpath("//a[text()='Send']").click():
+            driver.quit()
+          else:
+            fail_count += 1
+            print("oops.. missed one")
+            if fail_count >= 10:
+              print("10 consecutive click failures exiting..")
+              clean_up(driver)
 
+
+
+def clean_up(driver):
   try:
-    for x in range(message_count):
-      #driver.find_element_by_xpath("//input[@name='commit']").submit()
-      element_to_click = WebDriverWait(driver, 13).until(EC.element_to_be_clickable((By.XPATH, "//input[@name='commit']")))
-      element_to_click.submit()
-
+    driver.quit()
+    exit()
   except Exception as e:
-    print("couldn't find send button")
-    for x in range(message_count):
-      #driver.find_element_by_xpath("//input[@name='commit']").submit()
-      element_to_click = WebDriverWait(driver, 13).until(EC.element_to_be_clickable((By.XPATH, "//input[@name='commit']")))
-      element_to_click.submit()
+    exit()
 
-    if driver:
-      driver.quit()
-    else:
-      close() 	
+
   
-  #close window
-  driver.quit()
-
+#close window
 
 credentials = get_creds()
 driver = open_driver()
-send_sms(credentials,driver)
+send_sms(login(driver,credentials))
 
-#cool overloaded function call
-
-#send_sms(get_creds(),open_driver())
