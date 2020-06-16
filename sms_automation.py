@@ -49,7 +49,7 @@ def project_available(driver):
     try:
       #try to detect if we are at the job screen
       #currently not working
-      if driver.find_element_by_xpath("//p[text()='All messages for you sent! Other users have been assigned the remaining contacts.']"):
+      if driver.find_element_by_class_name('notice'):
         print("all jobs finished")
         clean_up(driver)
     except:
@@ -79,8 +79,9 @@ def send_sms(driver,message_count=30000):
           #try to detect if we are at the job screen
           #currently not working
           try:
-            driver.find_element_by_xpath("//p[text()='All messages for you sent! Other users have been assigned the remaining contacts.']")
-            driver.quit()
+            driver.find_element_by_class_name('notice')
+            print("no jobs found")
+            clean_up(driver)
           except:
           	 print("checking for EOF statement. not found.")
         except:
