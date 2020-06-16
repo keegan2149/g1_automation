@@ -65,30 +65,35 @@ def send_sms(driver,message_count=30000):
 
   #Send message_count messages
   fail_count = 0
+  click_count = 0
   if project_available(driver):
     for x in range(message_count):
       #driver.find_element_by_xpath("//input[@name='commit']").submit()
       try:
-        element_to_click = WebDriverWait(driver, 13).until(EC.element_to_be_clickable((By.XPATH, "//input[@name='commit']")))
+        element_to_click = WebDriverWait(driver, 4).until(EC.element_to_be_clickable((By.XPATH, "//input[@name='commit']")))
         element_to_click.submit()
         fail_count = 0
       except:
         try:
+          driver.find_element_by_xpath("//a[text()='Send']").click()	
           #try to detect if we are at the job screen
           #currently not working
-          if driver.find_element_by_xpath("//p[text()='All messages for you sent! Other users have been assigned the remaining contacts.']"):
+          try:
+            driver.find_element_by_xpath("//p[text()='All messages for you sent! Other users have been assigned the remaining contacts.']")
             driver.quit()
+          except:
+          	 print("checking for EOF statement. not found.")
         except:
           #try to detect if we are at the job screen
           #currently not working
-          if driver.find_element_by_xpath("//a[text()='Send']").click():
-            driver.quit()
+          fail_count += 1
+          print("oops.. missed one. Unknown error.")
+          if fail_count >= 10:
+            print("10 consecutive click failures exiting..")
+            clean_up(driver)          	
           else:
-            fail_count += 1
-            print("oops.. missed one")
-            if fail_count >= 10:
-              print("10 consecutive click failures exiting..")
-              clean_up(driver)
+            click_count +=1
+
 
 
 
