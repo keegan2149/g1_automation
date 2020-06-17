@@ -21,7 +21,8 @@ I'm currently working as a marketer.  One of my jobs it to send emails to potent
 # How to run it
 
     
-    TBD
+    python3 sms_automation.py
+    
 
 # Contribute
 
