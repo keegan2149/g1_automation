@@ -5,6 +5,14 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 import json
 import time
+import datetime
+
+
+
+def print_time(): 
+	now = datetime.datetime.now()
+	print ("Current date and time : ")
+	print (now.strftime("%Y-%m-%d %H:%M:%S"))
 
 #reads username and password and stores in a dictionary credentials[email:"your@wmail.com",password:"password"
 
@@ -17,6 +25,7 @@ def get_creds():
 
 
 def open_driver(options=['--ignore-certificate-errors',"--test-type"],driver_path='./chromedriver'):
+  print_time()
   driver_options = webdriver.ChromeOptions()
   for x in options:
     driver_options.add_argument(x)
@@ -100,6 +109,7 @@ def send_sms(driver,message_count=30000):
 
 def clean_up(driver):
   try:
+	print_time()
     driver.quit()
     quit()
   except Exception as e:
