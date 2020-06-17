@@ -101,9 +101,9 @@ def send_sms(driver,message_count=30000):
 def clean_up(driver):
   try:
     driver.quit()
-    exit()
+    quit()
   except Exception as e:
-    exit()
+    quit()
 
 
   
