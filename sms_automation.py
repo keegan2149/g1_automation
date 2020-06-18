@@ -9,10 +9,15 @@ import datetime
 
 
 
-def print_time(): 
-	now = datetime.datetime.now()
-	print ("Current date and time : ")
-	print (now.strftime("%Y-%m-%d %H:%M:%S"))
+def print_time(message = ""):
+  now = datetime.datetime.now()
+  print("\n")
+  if message:
+    print(message)
+  else:
+    print ("Current date and time : ")
+  print (now.strftime("%Y-%m-%d %H:%M:%S"))
+  print ("\n")
 
 #reads username and password and stores in a dictionary credentials[email:"your@wmail.com",password:"password"
 
@@ -32,6 +37,14 @@ def open_driver(options=['--ignore-certificate-errors',"--test-type"],driver_pat
 
   driver = webdriver.Chrome(executable_path=driver_path,chrome_options=driver_options)
   return driver 
+
+def clean_up(driver):
+  try:
+    print_time()
+    driver.quit()
+    quit()
+  except Exception as e:
+    quit()
 
 def login(driver,credentials,start_url='https://www.politicalcomms.com/users/sign_in',):
   driver.get(start_url)
@@ -53,20 +66,20 @@ def project_available(driver):
   #if there are none or if we are done return false
   try:
     driver.find_element_by_xpath("//a[text()='Send']").click()
-    return driver
-  except Exception as e:
     try:
-      #try to detect if we are at the job screen
-      #currently not working
       if driver.find_element_by_class_name('notice'):
         print("all jobs finished")
-        clean_up(driver)
+        return False
     except:
-      print("no jobs found")
-      clean_up(driver)
+      return True
+  except Exception as e:
+    print("unknown error")
     return False
 
-def send_sms(driver,message_count=30000):
+
+      
+
+def send_sms(driver,message_count=30000, fail_limit = 100):
 
   #Open SMS Project
   #if there are multiple projects then one can be found by name or element id
@@ -82,39 +95,32 @@ def send_sms(driver,message_count=30000):
         element_to_click = WebDriverWait(driver, 4).until(EC.element_to_be_clickable((By.XPATH, "//input[@name='commit']")))
         element_to_click.submit()
         fail_count = 0
+        click_count +=1
       except:
         try:
-          driver.find_element_by_xpath("//a[text()='Send']").click()	
-          #try to detect if we are at the job screen
-          #currently not working
-          try:
-            driver.find_element_by_class_name('notice')
-            print("no jobs found")
-            clean_up(driver)
-          except:
-          	 print("checking for EOF statement. not found.")
+          print("miss.. retrying")
+          element_to_click = WebDriverWait(driver, 4).until(EC.element_to_be_clickable((By.XPATH, "//input[@name='commit']")))
+          element_to_click.submit()
+          click_count +=1
         except:
           #try to detect if we are at the job screen
           #currently not working
+          #try to detect if we are at the job screen
+          #currently not working
+          print("retry failed..")
+          if project_available(driver):
+            print("SMS Project found Resuming")
+          else:
+            print("No Project Found")
+            clean_up(driver)
+
           fail_count += 1
           print("oops.. missed one. Unknown error.")
-          if fail_count >= 10:
-            print("10 consecutive click failures exiting..")
-            clean_up(driver)          	
-          else:
-            click_count +=1
-
-
-
-
-def clean_up(driver):
-  try:
-	print_time()
-    driver.quit()
-    quit()
-  except Exception as e:
-    quit()
-
+          if fail_count >= fail_limit:
+            print(fail_limit + " consecutive click failures exiting..")
+            clean_up(driver)
+  else:
+  	clean_up(driver)
 
   
 #close window
