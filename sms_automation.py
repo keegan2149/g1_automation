@@ -80,6 +80,15 @@ def project_available(driver):
 
 def send_sms(driver,message_count=30000, fail_limit = 100):
 
+  def increment_fail(fail_limit = 100):
+    fail_count += 1
+    log_entry("oops.. missed one. Unknown error.")
+      if fail_count >= fail_limit:
+        print(fail_limit + " consecutive click ")
+        return False
+      else:
+        return True
+
   #Open SMS Project
   #if there are multiple projects then one can be found by name or element id
 
@@ -113,17 +122,13 @@ def send_sms(driver,message_count=30000, fail_limit = 100):
           #currently not working
           #try to detect if we are at the job screen
           #currently not working
-          log_entry("retry failed..")
+          log_entry("retry failed.. are we at the project screen?")
           if project_available(driver):
+            log_entry("yes!")
             log_entry("SMS Project found Resuming")
           else:
-            log_entry("No Project Found")
-
-          fail_count += 1
-          log_entry("oops.. missed one. Unknown error.")
-          if fail_count >= fail_limit:
-            print(fail_limit + " consecutive click failures exiting..")
-            clean_up(driver)
+          	  if not increment_fail_count(fail_count):
+              clean_up(driver)
   else:
   	log_entry("No Jobs Found")
   	clean_up(driver)
