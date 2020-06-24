@@ -6,6 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import json
 import time
 import datetime
+import os
 
 
 
@@ -24,6 +25,7 @@ def get_creds():
 
 
 def open_driver(options=['--ignore-certificate-errors',"--test-type"],driver_path='./chromedriver'):
+  print
   log_entry("opening browser instance")
   driver_options = webdriver.ChromeOptions()
   for x in options:
@@ -33,6 +35,7 @@ def open_driver(options=['--ignore-certificate-errors',"--test-type"],driver_pat
   return driver 
 
 def clean_up(driver):
+  os.system('echo "\a"')
   try:
     log_entry("quitting.")
     driver.quit()
@@ -63,11 +66,24 @@ def project_available(driver):
     try:
       element_to_click = WebDriverWait(driver, 4).until(EC.element_to_be_clickable((By.XPATH, "//input[@name='commit']")))
       if element_to_click:
-      	return True
-      elif driver.find_element_by_class_name('notice'):
-          log_entry("all jobs finished")
-          return False
+        return True
     except:
+      try:
+        driver.find_element_by_xpath("//a[text()='Return']").click()
+        log_entry("all jobs finished")
+        return False
+      except:
+        log_entry("unknown screen")
+        return True
+      try:
+        driver.find_element_by_xpath("//p[contains(text(), 'All messages for you sent')")
+        log_entry("all jobs finished")
+        return False
+      except:
+        log_entry("unknown screen")
+        return True
+
+
       return True
   except Exception as e:
     log_entry("unknown error")
@@ -79,23 +95,24 @@ def project_available(driver):
       
 
 def send_sms(driver,message_count=30000, fail_limit = 100):
+  fail_count = 0
+  click_count = 0
 
-  def increment_fail(fail_limit = 100):
+  def increment_fail_count(fail_count,fail_limit = 15):
+    log_entry("fail count = " + str(fail_count))
     fail_count += 1
     log_entry("oops.. missed one. Unknown error.")
-      if fail_count >= fail_limit:
-        print(fail_limit + " consecutive click ")
-        return False
-      else:
-        return True
+    if fail_count >= fail_limit:
+      print(str(fail_limit) + " consecutive click fails exiting. ")
+      return False
+    else:
+      return fail_count
 
   #Open SMS Project
   #if there are multiple projects then one can be found by name or element id
 
 
   #Send message_count messages
-  fail_count = 0
-  click_count = 0
   if project_available(driver):
     log_entry("working..")
     for x in range(message_count):
@@ -124,14 +141,16 @@ def send_sms(driver,message_count=30000, fail_limit = 100):
           #currently not working
           log_entry("retry failed.. are we at the project screen?")
           if project_available(driver):
+            fail_count += 1 
             log_entry("yes!")
             log_entry("SMS Project found Resuming")
           else:
-          	  if not increment_fail_count(fail_count):
+            fail_count = increment_fail_count(fail_count)
+            if not fail_count:
               clean_up(driver)
   else:
-  	log_entry("No Jobs Found")
-  	clean_up(driver)
+    log_entry("No Jobs Found")
+    clean_up(driver)
 
   
 #close window
