@@ -117,21 +117,23 @@ def send_sms(driver,message_count=30000, fail_limit = 100):
     log_entry("working..")
     for x in range(message_count):
       #driver.find_element_by_xpath("//input[@name='commit']").submit()
+      time.sleep(2)
       try:
-
         element_to_click = WebDriverWait(driver, 4).until(EC.element_to_be_clickable((By.XPATH, "//input[@name='commit']")))
         element_to_click.submit()
         if fail_count > 0:
           log_entry("resuming.. ")
+          log_entry(str(fail_count) + "," + str(click_count))
         fail_count = 0
         click_count +=1
       except:
         try:
-          log_entry("miss.. retrying")
+          fail_count = increment_fail_count(fail_count)
+          log_entry(str(fail_count) + "," + str(click_count))
+          log_entry("retrying.. ")
+          click_count = 0
           element_to_click = WebDriverWait(driver, 4).until(EC.element_to_be_clickable((By.XPATH, "//input[@name='commit']")))
           element_to_click.submit()
-          if fail_count > 0:
-            log_entry("resuming.. ")
           fail_count = 0
           click_count +=1
         except:
@@ -140,14 +142,19 @@ def send_sms(driver,message_count=30000, fail_limit = 100):
           #try to detect if we are at the job screen
           #currently not working
           log_entry("retry failed.. are we at the project screen?")
+          fail_count = increment_fail_count(fail_count)
+          log_entry(str(fail_count) + "," + str(click_count))
+          click_count = 0
           if project_available(driver):
-            fail_count += 1 
             log_entry("yes!")
             log_entry("SMS Project found Resuming")
-          else:
+          elif fail_count >= fail_limit:
+            clean_up(driver)
+          elif fail_count > 0:
+            log_entry("resuming.. ")
             fail_count = increment_fail_count(fail_count)
-            if not fail_count:
-              clean_up(driver)
+            click_count = 0
+            log_entry(str(fail_count) + "," + str(click_count))
   else:
     log_entry("No Jobs Found")
     clean_up(driver)
