@@ -104,7 +104,7 @@ def send_sms(driver,message_count=30000, fail_limit = 100):
     log_entry("oops.. missed one. Unknown error.")
     if fail_count >= fail_limit:
       print(str(fail_limit) + " consecutive click fails exiting. ")
-      return False
+      return "exit"
     else:
       return fail_count
 
@@ -129,6 +129,8 @@ def send_sms(driver,message_count=30000, fail_limit = 100):
       except:
         try:
           fail_count = increment_fail_count(fail_count)
+          if fail_count == "exit":
+          	clean_up(driver)
           log_entry(str(fail_count) + "," + str(click_count))
           log_entry("retrying.. ")
           click_count = 0
@@ -143,6 +145,8 @@ def send_sms(driver,message_count=30000, fail_limit = 100):
           #currently not working
           log_entry("retry failed.. are we at the project screen?")
           fail_count = increment_fail_count(fail_count)
+          if fail_count == "exit":
+          	clean_up(driver)
           log_entry(str(fail_count) + "," + str(click_count))
           click_count = 0
           if project_available(driver):
