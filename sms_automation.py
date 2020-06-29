@@ -42,6 +42,7 @@ def clean_up(driver):
     quit()
   except Exception as e:
     quit()
+  quit()
 
 def login(driver,credentials,start_url='https://www.politicalcomms.com/users/sign_in',):
   driver.get(start_url)
@@ -99,9 +100,11 @@ def send_sms(driver,message_count=30000, fail_limit = 100):
   click_count = 0
 
   def increment_fail_count(fail_count,fail_limit = 15):
-    log_entry("fail count = " + str(fail_count))
-    fail_count += 1
-    log_entry("oops.. missed one. Unknown error.")
+    if fail_count is False:
+      return False
+    else:
+      log_entry("fail count = " + str(fail_count))
+      fail_count += 1
     if fail_count >= fail_limit:
       print(str(fail_limit) + " consecutive click fails exiting. ")
       return False
@@ -152,7 +155,7 @@ def send_sms(driver,message_count=30000, fail_limit = 100):
           if project_available(driver):
             log_entry("yes!")
             log_entry("SMS Project found Resuming")
-          elif fail_count >= fail_limit:
+          elif fail_count is False:
             clean_up(driver)
           elif fail_count > 0:
             log_entry("resuming.. ")
