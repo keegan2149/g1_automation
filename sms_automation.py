@@ -42,7 +42,6 @@ def clean_up(driver):
     quit()
   except Exception as e:
     quit()
-  quit()
 
 def login(driver,credentials,start_url='https://www.politicalcomms.com/users/sign_in',):
   driver.get(start_url)
@@ -113,12 +112,15 @@ def send_sms(driver,message_count=30000, fail_limit = 100):
 
   #Open SMS Project
   #if there are multiple projects then one can be found by name or element id
+  # need to trap for this selenium.common.exceptions.NoSuchWindowException: Message: no such window: window was already closed
 
 
   #Send message_count messages
   if project_available(driver):
     log_entry("working..")
     for x in range(message_count):
+      if fail_count is False:
+        clean_up(driver)
       #driver.find_element_by_xpath("//input[@name='commit']").submit()
       time.sleep(2)
       try:
@@ -132,8 +134,6 @@ def send_sms(driver,message_count=30000, fail_limit = 100):
       except:
         try:
           fail_count = increment_fail_count(fail_count)
-          if fail_count is False:
-          	clean_up(driver)
           log_entry(str(fail_count) + "," + str(click_count))
           log_entry("retrying.. ")
           click_count = 0
@@ -148,15 +148,11 @@ def send_sms(driver,message_count=30000, fail_limit = 100):
           #currently not working
           log_entry("retry failed.. are we at the project screen?")
           fail_count = increment_fail_count(fail_count)
-          if fail_count is False:
-          	clean_up(driver)
           log_entry(str(fail_count) + "," + str(click_count))
           click_count = 0
           if project_available(driver):
             log_entry("yes!")
             log_entry("SMS Project found Resuming")
-          elif fail_count is False:
-            clean_up(driver)
           elif fail_count > 0:
             log_entry("resuming.. ")
             fail_count = increment_fail_count(fail_count)
